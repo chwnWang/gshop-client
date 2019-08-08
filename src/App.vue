@@ -1,16 +1,21 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <FooterGuide/>
+    <FooterGuide v-show="$route.meta.footerShow"/>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
   import FooterGuide from './components/FooterGiude/FooterGiude.vue'
   export default {
-     components:{
-       FooterGuide
-     }
+    mounted(){
+      //页面加载之后  调用定位的方法
+      this.$store.dispatch('getAddress')
+    },
+
+    components:{
+      FooterGuide
+    }
   }
 </script>
 

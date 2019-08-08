@@ -12,19 +12,32 @@ export default[
         },
         {
             path: '/msite',
-            component: MSite
+            component: MSite,
+            meta:{
+                footerShow: true
+            }
         },
         {
             path: '/search',
-            component: Search
+            component: Search,
+            meta:{
+                footerShow: true
+            }
         },
         {
             path: '/profile',
-            component: Profile
+            component: Profile,
+            meta:{
+                footerShow: true
+            }
         },
         {
             path: '/order',
-            component: Order
+            component: Order,
+            meta:{
+              footerShow: true
+            }
+           
         },
         {
             path: '/',
