@@ -13,15 +13,18 @@
     <!--首页导航-->
     <nav class="msite_nav">
       <div class="swiper-container">
-        <div class="swiper-wrapper">
-          <div class="swiper-slide" v-for="(categroys, index) in categorysArr" :key="index">
-            <a href="javascript:" class="link_to_food" v-for="(categroy, index) in categroys" :key="index">
+        <div class="swiper-wrapper" v-if="categorysArr.length>0">
+          <div class="swiper-slide" v-for="(categorys, index) in categorysArr" :key="index">
+            <a href="javascript:" class="link_to_food" v-for="(categroy, index) in categorys" :key="index">
              <div class="food_container">
                 <img :src="'https://fuss10.elemecdn.com' + categroy.image_url">
               </div>
               <span>{{categroy.title}}</span>
             </a>
           </div>
+        </div>
+        <div v-else>
+          <img src='./images/msite_back.svg'/>
         </div>
         <!-- Add Pagination -->
         <div class="swiper-pagination"></div>
@@ -36,17 +39,21 @@
   import Shops from '../../components/Shops/Shops.vue'
   import {mapState} from 'vuex'
   import Swiper from 'swiper'
+  import 'swiper'
   import 'swiper/dist/css/swiper.css'
   
   export default {
     
-    mounted(){
-      this.$store.dispatch('getshops')
-      this.$store.dispatch('getcategroys')
+    mounted(){              
+      this.$store.dispatch('getShops')
+      this.$store.dispatch('getCategorys')
     },
     
     computed: {
-      ...mapState(['address','categroys']),
+      ...mapState({
+        address: state => state.msite.address, // 函数的返回值用为属性值
+        categorys: state => state.msite.categorys,
+      }),
                               
        categorysArr(){
         //定义一个大数组
@@ -54,11 +61,9 @@
         //定义一个小数组
         let smallArr = []
         //获取商品列表的数据
-        const {categroys} = this
+        const {categorys} = this
         //遍历总数组
-        console.log(categroys)
-         console.log(this)
-        categroys.forEach(categroy => {
+        categorys.forEach(categroy => {
           //将小数组添加到大数组中
           if(smallArr.length===0){
             bigArr.push(smallArr)
@@ -74,7 +79,7 @@
       }
     },
     watch:{
-      categroys(){
+      categorys(){
         this.$nextTick(()=>{
           new Swiper('.swiper-container', {
             loop: true, // 循环模式

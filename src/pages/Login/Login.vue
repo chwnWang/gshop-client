@@ -12,13 +12,15 @@
         <form>
           <div :class="{on : loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
+              <input type="text" placeholder="手机号" v-model="phone" name='phone' v-validate="'required|mobile'">
               <button :disabled="!isRightPhone || computeTime>0" class="get_verification"  
               :class="{right_phone_number: isRightPhone}" @click.prevent="sendCode()">
               {{computeTime > 0?`短信已发送(${computeTime}s)`:`获取验证码`}}</button>
+              <span style="color: red;" v-show="errors.has('phone')">{{ errors.first('phone') }}</span>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="text" v-model="code" name="code" v-validate="{required:true,regex: /^\d{6}$/}" placeholder="验证码">
+              <span style="color: red;" v-show="errors.has('code')">{{ errors.first('code') }}</span>
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -28,26 +30,29 @@
           <div :class="{on : !loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="text" v-model="name" name="name" v-validate="'required'" placeholder="用户名">
+                <span style="color: red;" v-show="errors.has('name')">{{ errors.first('name') }}</span>          
               </section>
               <section class="login_verification">
-                <input :type=" isShowPwd ? 'text' : 'password' " maxlength="8" placeholder="密码" >
+                <input :type=" isShowPwd ? 'text' : 'password' " placeholder="密码" v-model="pwd" name="密码" v-validate="'required'">
                 <div class="switch_button " :class=" isShowPwd ? 'on' : 'off'" @click="isShowPwd=!isShowPwd">
                   <div class="switch_circle" :class="{right: isShowPwd}"></div>
                   <span class="switch_text">{{isShowPwd ? 'abc' : ''}}</span>
                 </div>
+                <span style="color: red;" v-show="errors.has('pwd')">{{ errors.first('pwd') }}</span>          
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha">
+                <input type="text" placeholder="验证码" v-model="captcha" name="captcha" v-validate="{required: true, regex: /^.{4}$/}">
+                <img class="get_verification" src="http://localhost:4000/captcha" alt="captcha" ref="captcha" @click="updatecaptcha">
+                <span style="color: red;" v-show="errors.has('captcha')">{{ errors.first('captcha') }}</span>          
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="loginUser">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
-      <a href="javascript:" class="go_back">
+      <a href="javascript:" class="go_back" @click="$router.replace('/profile')">
         <i class="iconfont icon-jiantou2"></i>
       </a>
     </div>
@@ -55,11 +60,18 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import { Toast,MessageBox } from 'mint-ui'
+  import { reqSendCode,reqPwdLogin,reqSmsLogin } from '../../api'
+
   export default {
     data (){
       return{
         loginWay: true, //初始化短信登录显示
-        phone : '',
+        phone : '',     //手机号
+        code: '', // 一次性短信验证码
+        name: '', // 用户名
+        pwd: '', // 密码
+        captcha: '', // 一次性图形验证码
         computeTime: 0 ,  //时间倒计时
         isShowPwd: false, // 是否显示密码
       }
@@ -72,15 +84,49 @@
      }
     },
     methods:{
-      sendCode(){
+      async sendCode(){
         //获取剩余时间  初始化最大
         this.computeTime = 10
         const timeId=setInterval(()=>{
-          this.computeTime--
           if(this.computeTime===0){
             clearInterval(timeId)
+          }else{
+            this.computeTime--
           }
         },1000)
+
+        const result = await reqSendCode(this.phone);
+        if(result.code===0){
+          Toast('短信发送成功')
+        }else{
+          this.computeTime =0
+          MessageBox.alert(result.msg)
+          alert(result.msg)
+        }
+      },
+      updatecaptcha(){
+        this.$refs.captcha.src="http://localhost:4000/captcha?time"+Date.now();
+      },
+
+      async loginUser(){
+         //获取参数
+         const {name,pwd,captcha,code,phone,loginWay}=this
+         let result
+         if(loginWay){ //短信
+            result = await reqSmsLogin(phone,code)
+         }else{ //密码
+            result = await reqPwdLogin({name,pwd,captcha})
+         }
+         console.log(result)
+         if(result.code===0){
+            //获取user数据
+            const user = result.data
+            this.$store.dispatch('saveUser',user)
+            //跳转页面
+            this.$router.replace('/profile')
+         }else{
+            MessageBox.alert(result.msg)
+         }
       }
     }
 
@@ -178,7 +224,6 @@
                 &.on
                   background #02a774
                 >.switch_circle
-                  //transform translateX(27px)
                   position absolute
                   top -1px
                   left -1px
@@ -189,7 +234,7 @@
                   background #fff
                   box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                   transition transform .3s
-                  &.right12
+                  &.right
                     transform translateX(27px)
             .login_hint
               margin-top 12px

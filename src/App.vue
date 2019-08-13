@@ -11,7 +11,8 @@
     mounted(){
       //页面加载之后  调用定位的方法
       this.$store.dispatch('getAddress')
-    },
+      this.$store.dispatch('autoLogin')
+   },
 
     components:{
       FooterGuide

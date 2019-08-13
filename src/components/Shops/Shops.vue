@@ -5,8 +5,8 @@
             <span class="shop_header_title">附近商家</span>
         </div>
         <div class="shop_container">
-            <ul class="shop_list">
-                <li class="shop_li border-1px" v-for="shop in shops" :key="shop.id">
+            <ul class="shop_list" v-if="shops.length>0">
+                <li class="shop_li border-1px" v-for="shop in shops" :key="shop.id" @click="$router.push('/shop')">
                 <a>
                     <div class="shop_left">
                     <img class="shop_img" :src="'https://fuss10.elemecdn.com' + shop.image_path">
@@ -43,6 +43,24 @@
                 </a>
                 </li>
             </ul>
+
+            <ul v-else>
+              <li>
+                <img src="./images/shop_back.svg" alt="img"/>
+              </li>
+               <li>
+                <img src="./images/shop_back.svg" alt="img"/>
+              </li>
+               <li>
+                <img src="./images/shop_back.svg" alt="img"/>
+              </li>
+               <li>
+                <img src="./images/shop_back.svg" alt="img"/>
+              </li>
+               <li>
+                <img src="./images/shop_back.svg" alt="img"/>
+              </li>
+            </ul>
         </div>
     </div>
 </template>
@@ -51,9 +69,13 @@
   import {mapState} from 'vuex'
   import Star from '../Star/Star.vue'
   export default {
-      computed:{
-        ...mapState(['shops'])
+     
+      computed: {
+        ...mapState({
+          shops: state => state.msite.shops
+        })
       },
+     
       components:{
         Star
       }
